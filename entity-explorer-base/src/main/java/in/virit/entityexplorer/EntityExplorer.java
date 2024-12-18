@@ -64,10 +64,13 @@ public class EntityExplorer extends VVerticalLayout implements HasUrlParameter<S
 
     private void updateViewTitle() {
         if (isAttached() && entityType != null) {
-            findAncestor(TopLayout.class).setViewTitle("Entity Explorer: " + entityType.getName());
+            var layout = findAncestor(TopLayout.class);
+            // May be used in differet layouts as well programmatically
+            if(layout != null)
+                layout.setViewTitle("Entity Explorer: " + entityType.getName());
         }
     }
-
+    
     private class NewEntityButton extends VButton {
         public NewEntityButton() {
             addClickListener(event -> {
