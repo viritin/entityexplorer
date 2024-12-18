@@ -12,6 +12,7 @@ import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.dom.Style;
@@ -37,6 +38,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Route(layout = TopLayout.class)
 @MenuItem(hidden = true)
@@ -143,15 +146,21 @@ public class EntityEditorView extends VVerticalLayout implements EntityManagerAw
     }
 
     private void editEntity(Object entity, EntityType entityType) {
+        updateViewTitle(entity);
         removeAll();
         this.entityType = entityType;
         var em = getEntityManager();
-        findAncestor(TopLayout.class).setViewTitle("Editing " + entity.getClass().getSimpleName());
         AutoForm<Object> form = ctx.createForm(entity);
-        form.setSaveHandler(e -> {
+        form.setSaveHandler(v -> {
             em.getTransaction().begin();
             em.merge(entity);
-            em.getTransaction().commit();
+            try {
+                em.getTransaction().commit();
+            } catch (Exception e) {
+                em.getTransaction().rollback();
+                Notification.show("Error occured while saving:" + e.getMessage());
+                Logger.getLogger(getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
+            }
             navigate(EntityExplorer.class)
                     .ifPresent(view -> view.setEntityType(entityType));
         });
@@ -174,16 +183,25 @@ public class EntityEditorView extends VVerticalLayout implements EntityManagerAw
 
     }
 
+    protected void updateViewTitle(Object entity) {
+        var v = findAncestor(TopLayout.class);
+        if (v != null) {
+            v.setViewTitle("Editing " + entity.getClass().getSimpleName());
+        }
+    }
+
     private static class GenericManyToOneEditor extends CustomField<Object> implements EntityManagerAwareComponent {
 
         private final SingularAttribute attr;
         Object value;
-        Emphasis currentValue = new Emphasis() {{
-            getStyle().setWhiteSpace(Style.WhiteSpace.NOWRAP);
-            getStyle().setOverflow(Style.Overflow.HIDDEN);
-            getStyle().set("text-overflow", "ellipsis");
-            getStyle().setMaxWidth("400px");
-        }};
+        Emphasis currentValue = new Emphasis() {
+            {
+                getStyle().setWhiteSpace(Style.WhiteSpace.NOWRAP);
+                getStyle().setOverflow(Style.Overflow.HIDDEN);
+                getStyle().set("text-overflow", "ellipsis");
+                getStyle().setMaxWidth("400px");
+            }
+        };
         PopoverButton popoverButton = new PopoverButton(() -> {
             return pickEntity();
         });
@@ -194,7 +212,7 @@ public class EntityEditorView extends VVerticalLayout implements EntityManagerAw
             ManagedType managedType = getEntityManagerFactory().getMetamodel().managedType(getJavaType());
 
             EntityType<Object> entityType1 = getEntityManagerFactory().getMetamodel().entity(getJavaType());
-            JpaEntityGrid<Object> gridSelect = new JpaEntityGrid<>(entityType1);
+            JpaEntityGrid<Object> gridSelect = new JpaEntityGrid<>(entityType1, getEntityManager());
             gridSelect.setMinWidth("70vw");
             gridSelect.getColumnByKey("actions").removeFromParent();
 
@@ -215,12 +233,14 @@ public class EntityEditorView extends VVerticalLayout implements EntityManagerAw
         public GenericManyToOneEditor(Attribute attr) {
             this.attr = (SingularAttribute) attr;
             popoverButton.setTooltipText("Pick a new value...");
-            add(new HorizontalLayout() {{
-                setAlignItems(Alignment.BASELINE);
-                setWidthFull();
-                addAndExpand(currentValue);
-                add(popoverButton);
-            }});
+            add(new HorizontalLayout() {
+                {
+                    setAlignItems(Alignment.BASELINE);
+                    setWidthFull();
+                    addAndExpand(currentValue);
+                    add(popoverButton);
+                }
+            });
             Member javaMember = this.attr.getJavaMember();
             if (javaMember instanceof Field field) {
                 if (field.getAnnotation(MapsId.class) != null) {
@@ -241,7 +261,7 @@ public class EntityEditorView extends VVerticalLayout implements EntityManagerAw
 
         @Override
         protected void setPresentationValue(Object o) {
-            String string = "→ " + PrettyPrinter.printOneLiner(o, 400);
+            String string = "🔗→ " + PrettyPrinter.printOneLiner(o, 400);
             currentValue.setText(string);
             currentValue.setTitle(string); // maybe clipped by browser/css
         }
@@ -275,8 +295,8 @@ public class EntityEditorView extends VVerticalLayout implements EntityManagerAw
             } else {
                 content.add(new Emphasis(PrettyPrinter.printOneLiner(o, 40)));
                 content.add(new VButton(VaadinIcon.EDIT, () -> {
-                    navigate(EntityEditorView.class).ifPresent(entityEditorView ->
-                            entityEditorView.editEntity(o));
+                    navigate(EntityEditorView.class).ifPresent(entityEditorView
+                            -> entityEditorView.editEntity(o));
                 }).withTooltip("Edit referenced (1-1) entity..."));
             }
         }

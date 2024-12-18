@@ -2,8 +2,10 @@ package in.virit.entityexplorer;
 
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Emphasis;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -22,13 +24,22 @@ import org.vaadin.firitin.components.textfield.VTextField;
 import org.vaadin.firitin.rad.PrettyPrinter;
 
 import java.util.Set;
+import org.vaadin.firitin.util.style.LumoProps;
 
 public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwareComponent {
 
     private EntityType entityType;
 
     public JpaEntityGrid(EntityType<?> entityType) {
+        this(entityType, null);
+    }
+    
+    public JpaEntityGrid(EntityType<?> entityType, EntityManager entityManager) {
         super((Class<T>) entityType.getJavaType(), false);
+        if(entityManager != null) {
+            // If explicit entitymanager is not used, one will be create from the context
+           ComponentUtil.setData(this, EntityManager.class, entityManager);
+        }
         this.entityType = entityType;
         addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
@@ -52,13 +63,19 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
                 if (bpf.getName().equals("id") || bpf.getName().equals("lastUpdate")) {
                     column.setVisible(false);
                 }
-                column.getStyle().setMaxWidth("350px");
+                if(attribute.getJavaType() == String.class) {
+                    // Make sure String cols don't become too wide, will be clipped with ellipsis
+                    column.getStyle().setMaxWidth("350px");
+                }
             } else {
                 column = addComponentColumn(entity -> {
                     Object associationValue = bpf.getGetter().getValue(entity);
                     return new AssociationColumn(associationValue);
-                }).setHeader(attribute.getName());
+                });
+                column.setKey(attribute.getName());
             }
+
+            column.setHeader(new ColumnHeader(attribute));
             column.setResizable(true);
             column.setAutoWidth(true);
             column.setSortable(false);
@@ -67,6 +84,19 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
 
         listEntities(entityType);
 
+    }
+    
+    class ColumnHeader extends Div {
+        ColumnHeader(Attribute attr) {
+            String name = attr.getName();
+            var pt = attr.getPersistentAttributeType();
+            var javaSimpleType = attr.getJavaType().getSimpleName();
+            add(new Div(name));
+            add(new Div(pt + ":" + javaSimpleType){{
+               getStyle().setColor(LumoProps.CONTRAST_50PCT.var());
+               getStyle().setFontSize(LumoProps.FONT_SIZE_XXS.var());
+            }});
+        }
     }
 
     EntityType getEntityType() {
@@ -114,10 +144,21 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
             super(() -> {
                 EntityManager em = getEntityManager();
                 em.getTransaction().begin();
-                em.remove(entity);
-                em.getTransaction().commit();
+                var reattached = em.merge(entity);
+                em.remove(reattached);
+                try {
+                    em.getTransaction().commit();
+                } catch(Exception e) {
+                    em.getTransaction().rollback();
+                    String msg = e.getMessage();
+                    if (e instanceof jakarta.persistence.RollbackException re) {
+                        msg += ":" + e.getCause().getMessage();
+                    }
+                    Notification.show(msg);
+                }
                 listEntities(entityType);
             });
+            setTooltipText("Tries to delete entity. Note, that this can fail for constraint violations.");
             addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
         }
     }
@@ -136,11 +177,12 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
 
         public AssociationColumn(Object value) {
             add(
-                    new Emphasis("→ " + PrettyPrinter.printOneLiner(value, 100)) {
+                    new Emphasis("🔗→ " + PrettyPrinter.printOneLiner(value, 100)) {
                 {
                     setMaxWidth("150px");
                     getStyle().setOverflow(Style.Overflow.HIDDEN);
                     getStyle().set("text-overflow", "ellipsis");
+                    setTitle("Column is an assosiation to another entity.");
                 }
             },
                     new PrettyPrintButton(value)
