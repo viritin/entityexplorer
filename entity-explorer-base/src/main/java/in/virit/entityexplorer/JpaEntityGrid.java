@@ -10,12 +10,11 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.dom.Style;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.Attribute;
 import jakarta.persistence.metamodel.EntityType;
-import org.jetbrains.annotations.NotNull;
 import org.vaadin.firitin.components.button.VButton;
 import org.vaadin.firitin.components.grid.GridSelect;
-import org.vaadin.firitin.components.grid.VGrid;
 import org.vaadin.firitin.components.orderedlayout.VHorizontalLayout;
 import org.vaadin.firitin.components.orderedlayout.VVerticalLayout;
 import org.vaadin.firitin.components.popover.PopoverButton;
@@ -33,7 +32,11 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
         this.entityType = entityType;
         addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
-        addComponentColumn(entity -> new VHorizontalLayout(new QuickEditButton(entity), new PrettyPrintButton(entity))
+        addComponentColumn(entity -> new VHorizontalLayout(
+                new QuickEditButton(entity), 
+                new DeleteEntityButton(entity),
+                new PrettyPrintButton(entity)
+        )
                 .withSpacing(false))
                 .setFlexGrow(0)
                 .setAutoWidth(true)
@@ -91,7 +94,7 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
     }
 
     public void filter(String jpqlFilter) {
-        if(jpqlFilter.isEmpty()) {
+        if (jpqlFilter.isEmpty()) {
             listEntities(entityType);
         } else {
             String baseJpqlQuery = getBaseJpqlQuery();
@@ -105,7 +108,22 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
         return new FilterInput(this);
     }
 
+    private class DeleteEntityButton extends org.vaadin.firitin.components.button.DeleteButton {
+
+        DeleteEntityButton(Object entity) {
+            super(() -> {
+                EntityManager em = getEntityManager();
+                em.getTransaction().begin();
+                em.remove(entity);
+                em.getTransaction().commit();
+                listEntities(entityType);
+            });
+            addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        }
+    }
+
     private static class PrettyPrintButton extends PopoverButton {
+
         public PrettyPrintButton(Object entity) {
             super(() -> PrettyPrinter.toVaadin(entity));
             setIcon(VaadinIcon.EYE.create());
@@ -115,13 +133,16 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
     }
 
     private static class AssociationColumn extends VHorizontalLayout {
+
         public AssociationColumn(Object value) {
             add(
-                    new Emphasis("→ " + PrettyPrinter.printOneLiner(value, 100)) {{
-                        setMaxWidth("150px");
-                        getStyle().setOverflow(Style.Overflow.HIDDEN);
-                        getStyle().set("text-overflow", "ellipsis");
-                    }},
+                    new Emphasis("→ " + PrettyPrinter.printOneLiner(value, 100)) {
+                {
+                    setMaxWidth("150px");
+                    getStyle().setOverflow(Style.Overflow.HIDDEN);
+                    getStyle().set("text-overflow", "ellipsis");
+                }
+            },
                     new PrettyPrintButton(value)
             );
             setSpacing(false);
@@ -143,24 +164,30 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
 
             var popoverButton = new PopoverButton(() -> {
                 Set<Attribute<?, ?>> attributes = (Set<Attribute<?, ?>>) grid.getEntityType().getAttributes();
-                return new VVerticalLayout() {{
-                    add(new H3("Add new filter with template"));
-                    for (Attribute<?, ?> attribute : attributes) {
-                        add(new VHorizontalLayout() {{
-                            setAlignItems(Alignment.BASELINE);
-                            add(attribute.getName() + ":");
-                            for (FilterType filterType : FilterType.values()) {
-                                add(new VButton(filterType.name()) {{
-                                    addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-                                    addClickListener(e -> {
-                                        addFilterTemplate(attribute, filterType);
-                                        findAncestor(Popover.class).close();
-                                    });
-                                }});
-                            }
-                        }});
+                return new VVerticalLayout() {
+                    {
+                        add(new H3("Add new filter with template"));
+                        for (Attribute<?, ?> attribute : attributes) {
+                            add(new VHorizontalLayout() {
+                                {
+                                    setAlignItems(Alignment.BASELINE);
+                                    add(attribute.getName() + ":");
+                                    for (FilterType filterType : FilterType.values()) {
+                                        add(new VButton(filterType.name()) {
+                                            {
+                                                addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+                                                addClickListener(e -> {
+                                                    addFilterTemplate(attribute, filterType);
+                                                    findAncestor(Popover.class).close();
+                                                });
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+                        }
                     }
-                }};
+                };
 
             });
             popoverButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
@@ -199,6 +226,7 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
     }
 
     private class QuickEditButton extends VButton {
+
         public QuickEditButton(Object proxy) {
             setIcon(VaadinIcon.EDIT.create());
             addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
