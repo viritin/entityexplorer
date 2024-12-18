@@ -24,6 +24,8 @@ import org.vaadin.firitin.components.textfield.VTextField;
 import org.vaadin.firitin.rad.PrettyPrinter;
 
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.vaadin.firitin.util.style.LumoProps;
 
 public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwareComponent {
@@ -33,18 +35,18 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
     public JpaEntityGrid(EntityType<?> entityType) {
         this(entityType, null);
     }
-    
+
     public JpaEntityGrid(EntityType<?> entityType, EntityManager entityManager) {
         super((Class<T>) entityType.getJavaType(), false);
-        if(entityManager != null) {
+        if (entityManager != null) {
             // If explicit entitymanager is not used, one will be create from the context
-           ComponentUtil.setData(this, EntityManager.class, entityManager);
+            ComponentUtil.setData(this, EntityManager.class, entityManager);
         }
         this.entityType = entityType;
         addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
         addComponentColumn(entity -> new VHorizontalLayout(
-                new QuickEditButton(entity), 
+                new QuickEditButton(entity),
                 new DeleteEntityButton(entity),
                 new PrettyPrintButton(entity)
         )
@@ -58,14 +60,27 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
             Attribute<?, ?> attribute = entityType.getAttribute(bpf.getName());
             Column column;
             if (!attribute.isAssociation()) {
-                // Let Vaadin figure out the best renderer
-                column = addColumn(bpf.getName());
+                if (attribute.getJavaType() == String.class) {
+                    column = addColumn(b -> {
+                        try {
+                            String str = "" + bpf.getGetter().callOn(b);
+                            // cut long strings. Less data and vaadin don't support max width for grid cols (and viritin's solution seem to bug some times)
+                            if (str.length() > 40) {
+                                str = str.substring(0, 40) + "...";
+                            }
+                            return str;
+                        } catch (Exception ex) {
+                            Logger.getLogger(JpaEntityGrid.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        return "??";
+                    });
+                    column.setKey(bpf.getName());
+                } else {
+                    // Let Vaadin figure out the best renderer
+                    column = addColumn(bpf.getName());
+                }
                 if (bpf.getName().equals("id") || bpf.getName().equals("lastUpdate")) {
                     column.setVisible(false);
-                }
-                if(attribute.getJavaType() == String.class) {
-                    // Make sure String cols don't become too wide, will be clipped with ellipsis
-                    column.getStyle().setMaxWidth("350px");
                 }
             } else {
                 column = addComponentColumn(entity -> {
@@ -85,17 +100,20 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
         listEntities(entityType);
 
     }
-    
+
     class ColumnHeader extends Div {
+
         ColumnHeader(Attribute attr) {
             String name = attr.getName();
             var pt = attr.getPersistentAttributeType();
             var javaSimpleType = attr.getJavaType().getSimpleName();
             add(new Div(name));
-            add(new Div(pt + ":" + javaSimpleType){{
-               getStyle().setColor(LumoProps.CONTRAST_50PCT.var());
-               getStyle().setFontSize(LumoProps.FONT_SIZE_XXS.var());
-            }});
+            add(new Div(pt + ":" + javaSimpleType) {
+                {
+                    getStyle().setColor(LumoProps.CONTRAST_50PCT.var());
+                    getStyle().setFontSize(LumoProps.FONT_SIZE_XXS.var());
+                }
+            });
         }
     }
 
@@ -148,7 +166,7 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
                 em.remove(reattached);
                 try {
                     em.getTransaction().commit();
-                } catch(Exception e) {
+                } catch (Exception e) {
                     em.getTransaction().rollback();
                     String msg = e.getMessage();
                     if (e instanceof jakarta.persistence.RollbackException re) {
@@ -179,7 +197,7 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
             add(
                     new Emphasis("🔗→ " + PrettyPrinter.printOneLiner(value, 100)) {
                 {
-                    setMaxWidth("150px");
+                    setMaxWidth("200px");
                     getStyle().setOverflow(Style.Overflow.HIDDEN);
                     getStyle().set("text-overflow", "ellipsis");
                     setTitle("Column is an assosiation to another entity.");
