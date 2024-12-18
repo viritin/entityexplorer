@@ -30,7 +30,7 @@ Add dependency:
 		<dependency>
 			<groupId>in.virit.entityexplorer</groupId>
 			<artifactId>entity-explorer</artifactId>
-			<version>0.0.1</version>
+			<version>0.0.2</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -59,7 +59,7 @@ Instead of the above dependency, use this module that don't include Spring Boot 
         <dependency>
             <groupId>in.virit.entityexplorer</groupId>
             <artifactId>entity-explorer-base</artifactId>
-            <version>0.0.1</version>
+            <version>0.0.2</version>
         </dependency>
 
 Then manually register require views. You might want to use your own main layout, but here we add them to the one included in the module. Add this code snippet to your @SpringBootApplication:
