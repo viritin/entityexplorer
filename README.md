@@ -6,6 +6,12 @@ A general purpose "database browser" for Spring Boot apps that works on JPA leve
 
 *A Screenshot of a development version of Entity Explorer applied on [Sakila example database](https://github.com/mstahv/sakila-spring-data-jpa-starter).*
 
+## Disclaimers and Design Notes
+
+ * The app aquires EntityManagerFactory directly form ApplicationContext and creates an EntityManager per view/component. This is NOT the most efficient way to consume your DB, but fairly handy for this kind of test/admin UI as lazy loading works like a charm.
+ * As EntityExplorer knows nothing about usage patterns, it makes no smart joins. Thus, especially on entities with lot of relations, there can be dozens of DB queries. Again, not an approach you want to take for an application with lot of active users, but most likely find fine for this kind of usage and might be ok for e.g. admin users.
+ * Because of the above design decisisions DOT NOT USE this as an architectural reference for your actual web UI built with Vaadin.
+
 ## Current Features
 
  * Lists all JPA entities in the menu
