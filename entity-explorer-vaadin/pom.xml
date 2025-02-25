@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>in.virit.entityexplorer</groupId>
-        <artifactId>entity-explorer-parent</artifactId>
-        <version>0.0.5-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
-    </parent>
+<project xmlns="http://maven.apache.org/POM/4.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.1.0 http://maven.apache.org/xsd/maven-4.1.0.xsd">
+    <parent/>
 
     <artifactId>entity-explorer-vaadin</artifactId>
     <name>Entity Explorer for Vaadin apps</name>
@@ -34,13 +28,22 @@
             <artifactId>vaadin-spring-boot-starter</artifactId>
             <version>${vaadin.version}</version>
             <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.vaadin</groupId>
+                    <artifactId>vaadin-dev</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.vaadin</groupId>
+                    <artifactId>hilla</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-    
         
     </dependencies>
 
