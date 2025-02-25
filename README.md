@@ -66,5 +66,5 @@ If you want it to be more integrated part of your app, check out the "base class
         <dependency>
             <groupId>in.virit.entityexplorer</groupId>
             <artifactId>entity-explorer-base</artifactId>
-            <version>0.0.3</version>
+            <version>0.0.4</version>
         </dependency>
