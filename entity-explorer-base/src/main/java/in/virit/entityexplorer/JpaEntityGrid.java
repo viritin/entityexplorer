@@ -63,7 +63,7 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
                 if (attribute.getJavaType() == String.class) {
                     column = addColumn(b -> {
                         try {
-                            String str = "" + bpf.getGetter().callOn(b);
+                            String str = "" + bpf.getAccessor().getValue(b);
                             // cut long strings. Less data and vaadin don't support max width for grid cols (and viritin's solution seem to bug some times)
                             if (str.length() > 40) {
                                 str = str.substring(0, 40) + "...";
@@ -84,7 +84,7 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
                 }
             } else {
                 column = addComponentColumn(entity -> {
-                    Object associationValue = bpf.getGetter().getValue(entity);
+                    Object associationValue = bpf.getAccessor().getValue(entity);
                     return new AssociationColumn(associationValue);
                 });
                 column.setKey(attribute.getName());

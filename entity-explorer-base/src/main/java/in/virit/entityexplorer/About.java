@@ -1,10 +1,11 @@
 package in.virit.entityexplorer;
 
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.vaadin.firitin.components.RichText;
 import org.vaadin.firitin.components.orderedlayout.VVerticalLayout;
 
-@Route(value = "", layout = TopLayout.class)
+@AnonymousAllowed
 public class About extends VVerticalLayout {
 
     public About() {

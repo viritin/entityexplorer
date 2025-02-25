@@ -8,7 +8,7 @@ import com.vaadin.flow.router.AfterNavigationObserver;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.OptionalParameter;
-import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.metamodel.EntityType;
 import org.vaadin.firitin.appframework.MenuItem;
@@ -19,8 +19,8 @@ import org.vaadin.firitin.components.orderedlayout.VVerticalLayout;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@Route(layout = TopLayout.class)
 @MenuItem(hidden = true)
+@AnonymousAllowed
 public class EntityExplorer extends VVerticalLayout implements HasUrlParameter<String>, AfterNavigationObserver {
     private final EntityManagerFactory entityManagerFactory;
     private EntityType entityType;

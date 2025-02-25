@@ -44,10 +44,10 @@ public class EntityExplorerAutoconfiguration {
     void registerRoutes(ServiceInitEvent evt) {
         RouteConfiguration configuration = RouteConfiguration
                 .forApplicationScope();
-        Arrays.asList(About.class, EntityEditorView.class, EntityExplorer.class)
-                .forEach(view -> {
-                    configuration.setAnnotatedRoute(view);
-                });
+        
+        configuration.setRoute("", About.class, TopLayout.class);
+        configuration.setRoute("entityeditor", EntityEditorView.class, TopLayout.class);
+        configuration.setRoute("entityexplorer", EntityExplorer.class, TopLayout.class);
 
         // Better error handling, e.g. with Grid & error in lazy loading from backend
         evt.getSource().addSessionInitListener(e -> {

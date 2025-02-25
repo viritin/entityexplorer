@@ -1,3 +1,6 @@
 entity-explorer/node_modules
 entity-explorer-base/target
 entity-explorer/target
+/entity-explorer 2/target/
+/entity-explorer-vaadin/target/
+/target/

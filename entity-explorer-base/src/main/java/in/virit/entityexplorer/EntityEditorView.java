@@ -17,6 +17,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.metamodel.Attribute;
 import jakarta.persistence.metamodel.EntityType;
@@ -41,8 +42,8 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@Route(layout = TopLayout.class)
 @MenuItem(hidden = true)
+@AnonymousAllowed
 public class EntityEditorView extends VVerticalLayout implements EntityManagerAwareComponent {
 
     private static ObjectMapper jack = new ObjectMapper();

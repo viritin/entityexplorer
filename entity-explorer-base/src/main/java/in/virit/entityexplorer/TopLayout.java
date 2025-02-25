@@ -4,6 +4,7 @@ import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
+import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.metamodel.EntityType;
@@ -34,11 +35,17 @@ public class TopLayout extends MainLayout {
         SideNav sideNavItem = new SideNav();
         sideNavItem.setLabel("Application entities");
         sideNavItem.setExpanded(true);
+        
+        
+        String ee = RouteConfiguration.forSessionScope().getUrl(EntityExplorer.class);
+        
         List<EntityType<?>> entities = new ArrayList<>(entityManagerFactory.getMetamodel().getEntities());
         Collections.sort(entities, Comparator.comparing(EntityType::getName));
         entities.forEach(e -> {
             // TODO VMP
-            sideNavItem.addItem(new SideNavItem(e.getName(), "entityexplorer/"+e.getName()){{getStyle().setMarginBottom("-5px");}});
+            // TODO VMP 2X
+            
+            sideNavItem.addItem(new SideNavItem(e.getName(), ee + "/"+e.getName()){{getStyle().setMarginBottom("-5px");}});
 
         });
         // TODO VMP

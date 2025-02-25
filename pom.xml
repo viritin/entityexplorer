@@ -37,7 +37,7 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
-                <version>3.4.0</version>
+                <version>3.4.3</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>    
@@ -47,12 +47,13 @@
     <properties>
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <vaadin.version>24.6.0</vaadin.version>
+        <vaadin.version>24.6.5</vaadin.version>
     </properties>
 		
     <modules>
         <module>entity-explorer-base</module>
         <module>entity-explorer</module>
+        <module>entity-explorer-vaadin</module>
     </modules>
     
     <build>

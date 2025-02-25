@@ -8,8 +8,8 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>entity-explorer</artifactId>
-    <name>Entity explorer</name>
+    <artifactId>entity-explorer-vaadin</artifactId>
+    <name>Entity Explorer for Vaadin apps</name>
     <packaging>jar</packaging>
 
     <properties>
@@ -24,27 +24,24 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>in.virit.ws</groupId>
-            <artifactId>sb</artifactId>
-            <version>24.6.5</version>            
-        </dependency>
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-spring-boot-starter</artifactId>
+            <version>${vaadin.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-rest</artifactId>
-            <scope>test</scope>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>test</scope>
-        </dependency>
-
+    
+        
     </dependencies>
 
     <build>
