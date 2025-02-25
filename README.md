@@ -30,7 +30,7 @@ Add dependency:
 		<dependency>
 			<groupId>in.virit.entityexplorer</groupId>
 			<artifactId>entity-explorer</artifactId>
-			<version>0.0.3</version>
+			<version>0.0.4</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -52,37 +52,19 @@ logging.level.com.vaadin=WARN
 
 ## Usage for Vaadin apps
 
-With Vaadin apps, setup is bit more diffifult and may change in upcoming version (if I get some enhancementw to core 🤓). Currently this has proven to work in a trivial case:
+If you are fine having the EntityExplorer as a "non-integrated" part, for example during development like suggested above, use the following dependency, which expects you already have a reasonably modern Vaadin app in your module. It registers views to /entityexplorer, using the same servlet, with @AnonymousAllowed annotation:
 
-Instead of the above dependency, use this module that don't include Spring Boot autoconfiguration: 
+        <dependency>
+            <groupId>in.virit.entityexplorer</groupId>
+            <artifactId>entity-explorer-vaadin</artifactId>
+            <version>0.0.4</version>
+	    <scope>test</scope>
+        </dependency>
+
+If you want it to be more integrated part of your app, check out the "base classes" from this module. Then sublass them and register to your own app with @Route annotation and with your desired access control logic or do it somehow dynamically, something like [the entity-explorer-vaadin autoconfiguration](https://github.com/viritin/entityexplorer/blob/main/entity-explorer-vaadin/src/main/java/in/virit/entityexplorer/EntityExplorerVaadinAppAutoconfiguration.java). Also see the [TopLayout class](https://github.com/viritin/entityexplorer/blob/main/entity-explorer-base/src/main/java/in/virit/entityexplorer/TopLayout.java) for an example how it registers quick links to all found entities.
 
         <dependency>
             <groupId>in.virit.entityexplorer</groupId>
             <artifactId>entity-explorer-base</artifactId>
             <version>0.0.3</version>
         </dependency>
-
-Then manually register require views. You might want to use your own main layout, but here we add them to the one included in the module. Add this code snippet to your @SpringBootApplication:
-
-    @EventListener
-    void registerRoutes(ServiceInitEvent evt) {
-        RouteConfiguration configuration = RouteConfiguration
-                .forApplicationScope();
-        configuration.setRoute("entityexplorerabout", About.class, TopLayout.class);
-        Arrays.asList(EntityEditorView.class, EntityExplorer.class)
-                .forEach(view -> {
-                    configuration.setAnnotatedRoute(view);
-                });
-
-        // Better error handling, e.g. with Grid & error in lazy loading from backend
-        evt.getSource().addSessionInitListener(e -> {
-            e.getSession().setErrorHandler((ErrorHandler) event -> {
-                UI current = UI.getCurrent();
-                if (current != null) {
-                    current.access(() -> Notification.show("Error: " + event.getThrowable().getMessage()));
-                } else {
-                    event.getThrowable().printStackTrace();
-                }
-            });
-        });
-    }
