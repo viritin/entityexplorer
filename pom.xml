@@ -6,7 +6,7 @@
     <artifactId>entity-explorer-parent</artifactId>
     <name>Entity Explorer Parent</name>
     <description>Parent project for entity-explorer</description>
-    <version>0.0.4</version>
+    <version>0.0.5-SNAPSHOT</version>
     
     <url>https://github.com/viritin/entityexplorer</url>
 
@@ -29,7 +29,7 @@
         <url>https://github.com/viritin/entityexplorer</url>
         <connection>scm:git:git://github.com/viritin/entityexplorer.git</connection>
         <developerConnection>scm:git:ssh://git@github.com:/viritin/entityexplorer.git</developerConnection>
-      <tag>entity-explorer-parent-0.0.4</tag>
+      <tag>HEAD</tag>
   </scm>
     
     <dependencyManagement>
