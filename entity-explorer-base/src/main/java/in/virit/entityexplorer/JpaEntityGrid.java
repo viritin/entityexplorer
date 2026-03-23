@@ -1,6 +1,5 @@
 package in.virit.entityexplorer;
 
-import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -27,6 +26,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.vaadin.firitin.util.style.LumoProps;
+import tools.jackson.databind.introspect.BeanPropertyDefinition;
 
 public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwareComponent {
 

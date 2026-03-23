@@ -1,6 +1,5 @@
 package in.virit.entityexplorer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Focusable;
 import com.vaadin.flow.component.HasHelper;
@@ -16,7 +15,6 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.dom.Style;
-import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.metamodel.Attribute;
@@ -31,6 +29,7 @@ import org.vaadin.firitin.components.popover.PopoverButton;
 import org.vaadin.firitin.rad.AutoForm;
 import org.vaadin.firitin.rad.AutoFormContext;
 import org.vaadin.firitin.rad.PrettyPrinter;
+import tools.jackson.databind.ObjectMapper;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;

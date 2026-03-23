@@ -37,7 +37,7 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
-                <version>3.4.3</version>
+                <version>4.0.4</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>    
@@ -45,9 +45,9 @@
     </dependencyManagement>
     
     <properties>
-        <maven.compiler.release>17</maven.compiler.release>
+        <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <vaadin.version>24.6.5</vaadin.version>
+        <vaadin.version>25.1.0-rc2</vaadin.version>
     </properties>
 		
     <modules>
@@ -106,7 +106,7 @@
                     <plugin>
                         <groupId>org.sonatype.central</groupId>
                         <artifactId>central-publishing-maven-plugin</artifactId>
-                        <version>0.6.0</version>
+                        <version>0.9.0</version>
                         <extensions>true</extensions>
                         <configuration>
                             <publishingServerId>central</publishingServerId>

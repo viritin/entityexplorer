@@ -14,7 +14,7 @@
 
     <properties>
         <!-- Defaults come from parent, but shown here how to override -->
-        <spring-boot.version>3.4.3</spring-boot.version>
+        <spring-boot.version>4.0.4</spring-boot.version>
     </properties>
 		
     <dependencies>
@@ -26,7 +26,7 @@
         <dependency>
             <groupId>in.virit.ws</groupId>
             <artifactId>sb</artifactId>
-            <version>24.6.5</version>            
+            <version>25.1.0-rc2</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

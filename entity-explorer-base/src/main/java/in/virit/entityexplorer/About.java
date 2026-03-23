@@ -1,6 +1,5 @@
 package in.virit.entityexplorer;
 
-import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.vaadin.firitin.components.RichText;
 import org.vaadin.firitin.components.orderedlayout.VVerticalLayout;
