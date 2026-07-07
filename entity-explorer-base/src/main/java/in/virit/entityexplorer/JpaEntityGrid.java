@@ -11,6 +11,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.dom.Style;
+import com.vaadin.flow.function.ValueProvider;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.Attribute;
 import jakarta.persistence.metamodel.EntityType;
@@ -57,23 +58,18 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
                 .setHeader("Actions");
 
         for (BeanPropertyDefinition bpf : getBeanPropertyDefinitions()) {
-            Attribute<?, ?> attribute = entityType.getAttribute(bpf.getName());
+            Attribute<?, ?> attribute = getAttributeOrNull(entityType, bpf.getName());
             Column column;
-            if (!attribute.isAssociation()) {
+            if (attribute == null) {
+                // A bean property with no matching JPA attribute, e.g. a derived
+                // getter like Customer.getCreditRating(). Show it as a read-only
+                // computed column; it has no DB column, so no sorting/filtering.
+                column = addColumn(stringValue(bpf));
+                column.setKey(bpf.getName());
+                column.setHeader(new ColumnHeader(bpf.getName(), "COMPUTED", bpf.getRawPrimaryType()));
+            } else if (!attribute.isAssociation()) {
                 if (attribute.getJavaType() == String.class) {
-                    column = addColumn(b -> {
-                        try {
-                            String str = "" + bpf.getAccessor().getValue(b);
-                            // cut long strings. Less data and vaadin don't support max width for grid cols (and viritin's solution seem to bug some times)
-                            if (str.length() > 40) {
-                                str = str.substring(0, 40) + "...";
-                            }
-                            return str;
-                        } catch (Exception ex) {
-                            Logger.getLogger(JpaEntityGrid.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                        return "??";
-                    });
+                    column = addColumn(stringValue(bpf));
                     column.setKey(bpf.getName());
                 } else {
                     // Let Vaadin figure out the best renderer
@@ -82,15 +78,16 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
                 if (bpf.getName().equals("id") || bpf.getName().equals("lastUpdate")) {
                     column.setVisible(false);
                 }
+                column.setHeader(new ColumnHeader(attribute));
             } else {
                 column = addComponentColumn(entity -> {
                     Object associationValue = bpf.getAccessor().getValue(entity);
                     return new AssociationColumn(associationValue);
                 });
                 column.setKey(attribute.getName());
+                column.setHeader(new ColumnHeader(attribute));
             }
 
-            column.setHeader(new ColumnHeader(attribute));
             column.setResizable(true);
             column.setAutoWidth(true);
             column.setSortable(false);
@@ -101,14 +98,45 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
 
     }
 
+    /**
+     * Renders a value column for a bean property using its accessor, cutting
+     * overly long string representations. Works for both persistent String
+     * attributes and computed (non-persistent) properties.
+     */
+    private ValueProvider<T, String> stringValue(BeanPropertyDefinition bpf) {
+        return b -> {
+            try {
+                String str = "" + bpf.getAccessor().getValue(b);
+                // cut long strings. Less data and vaadin don't support max width for grid cols (and viritin's solution seem to bug some times)
+                if (str.length() > 40) {
+                    str = str.substring(0, 40) + "...";
+                }
+                return str;
+            } catch (Exception ex) {
+                Logger.getLogger(JpaEntityGrid.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            return "??";
+        };
+    }
+
+    private static Attribute<?, ?> getAttributeOrNull(EntityType<?> entityType, String name) {
+        try {
+            return entityType.getAttribute(name);
+        } catch (IllegalArgumentException e) {
+            // Not a persistent attribute (e.g. a derived getter with no field)
+            return null;
+        }
+    }
+
     class ColumnHeader extends Div {
 
         ColumnHeader(Attribute attr) {
-            String name = attr.getName();
-            var pt = attr.getPersistentAttributeType();
-            var javaSimpleType = attr.getJavaType().getSimpleName();
+            this(attr.getName(), String.valueOf(attr.getPersistentAttributeType()), attr.getJavaType());
+        }
+
+        ColumnHeader(String name, String typeLabel, Class<?> javaType) {
             add(new Div(name));
-            add(new Div(pt + ":" + javaSimpleType) {
+            add(new Div(typeLabel + ":" + javaType.getSimpleName()) {
                 {
                     getStyle().setColor(LumoProps.CONTRAST_50PCT.var());
                     getStyle().setFontSize(LumoProps.FONT_SIZE_XXS.var());

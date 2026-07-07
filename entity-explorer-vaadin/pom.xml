@@ -14,7 +14,7 @@
 
     <properties>
         <!-- Defaults come from parent, but shown here how to override -->
-        <spring-boot.version>4.0.4</spring-boot.version>
+        <spring-boot.version>4.1.0</spring-boot.version>
     </properties>
 		
     <dependencies>
