@@ -1,4 +1,4 @@
-package in.virit.entityexplorer;
+package in.virit.entityexplorer.filter.ui;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.ButtonVariant;

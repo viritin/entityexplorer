@@ -4,6 +4,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import in.virit.entityexplorer.filter.FilterGroup;
 import in.virit.entityexplorer.filter.FilterPredicateBuilder;
 import in.virit.entityexplorer.filter.FilterProperty;
+import in.virit.entityexplorer.filter.ui.FilterBuilderDialog;
 import org.vaadin.firitin.components.button.VButton;
 import org.vaadin.firitin.components.orderedlayout.VHorizontalLayout;
 
