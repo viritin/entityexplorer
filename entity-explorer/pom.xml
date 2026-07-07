@@ -26,7 +26,7 @@
         <dependency>
             <groupId>in.virit.ws</groupId>
             <artifactId>sb</artifactId>
-            <version>25.2.1-SNAPSHOT</version>
+            <version>25.2.1</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
