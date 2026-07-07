@@ -12,6 +12,8 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.function.ValueProvider;
+import in.virit.entityexplorer.filter.CriteriaListing;
+import in.virit.entityexplorer.filter.FilterSpecification;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.Attribute;
 import jakarta.persistence.metamodel.EntityType;
@@ -145,7 +147,7 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
         }
     }
 
-    EntityType getEntityType() {
+    public EntityType getEntityType() {
         return entityType;
     }
 
@@ -180,8 +182,22 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
         }
     }
 
+    /**
+     * Filters the listing with a JPA Criteria based specification. Replaces
+     * any previously set filter (JPQL or criteria based) — the whole data
+     * provider is swapped, so the last applied filter always wins.
+     * <p>
+     * The criteria query is rebuilt from the specification on every page
+     * fetch with the then-current EntityManager's CriteriaBuilder.
+     */
+    public void filter(FilterSpecification<T> specification) {
+        Class<T> javaType = (Class<T>) entityType.getJavaType();
+        setItems(query -> CriteriaListing.fetch(getEntityManager(), javaType,
+                specification, query.getOffset(), query.getLimit()).stream());
+    }
+
     public Component createFilterField() {
-        return new FilterInput(this);
+        return new FilterToolbar<>(this);
     }
 
     private class DeleteEntityButton extends org.vaadin.firitin.components.button.DeleteButton {

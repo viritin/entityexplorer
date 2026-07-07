@@ -2,6 +2,8 @@ package in.virit.entityexplorerit;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -16,6 +18,9 @@ public class Person {
 
     private String firstName;
     private String lastName;
+
+    @Enumerated(EnumType.STRING)
+    private ContactMethod preferredContactMethod;
 
     @ManyToOne(cascade = CascadeType.REMOVE)
     private Person friend;
@@ -34,6 +39,14 @@ public class Person {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    public ContactMethod getPreferredContactMethod() {
+        return preferredContactMethod;
+    }
+
+    public void setPreferredContactMethod(ContactMethod preferredContactMethod) {
+        this.preferredContactMethod = preferredContactMethod;
     }
 
     public Person getFriend() {
