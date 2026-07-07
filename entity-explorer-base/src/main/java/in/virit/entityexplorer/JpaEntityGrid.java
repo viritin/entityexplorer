@@ -10,6 +10,8 @@ import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.popover.Popover;
+import com.vaadin.flow.data.provider.QuerySortOrder;
+import com.vaadin.flow.data.provider.SortDirection;
 import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.function.ValueProvider;
 import in.virit.entityexplorer.filter.CriteriaListing;
@@ -25,9 +27,11 @@ import org.vaadin.firitin.components.popover.PopoverButton;
 import org.vaadin.firitin.components.textfield.VTextField;
 import org.vaadin.firitin.rad.PrettyPrinter;
 
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.vaadin.firitin.util.style.LumoProps;
 import tools.jackson.databind.introspect.BeanPropertyDefinition;
 
@@ -69,10 +73,12 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
                 column = addColumn(stringValue(bpf));
                 column.setKey(bpf.getName());
                 column.setHeader(new ColumnHeader(bpf.getName(), "COMPUTED", bpf.getRawPrimaryType()));
+                column.setSortable(false);
             } else if (!attribute.isAssociation()) {
                 if (attribute.getJavaType() == String.class) {
                     column = addColumn(stringValue(bpf));
                     column.setKey(bpf.getName());
+                    column.setSortProperty(bpf.getName());
                 } else {
                     // Let Vaadin figure out the best renderer
                     column = addColumn(bpf.getName());
@@ -81,6 +87,10 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
                     column.setVisible(false);
                 }
                 column.setHeader(new ColumnHeader(attribute));
+                // Basic-typed attributes sort in the backend (JPQL/criteria
+                // order by); associations, embeddables and computed columns
+                // stay unsortable.
+                column.setSortable(isSortable(attribute));
             } else {
                 column = addComponentColumn(entity -> {
                     Object associationValue = bpf.getAccessor().getValue(entity);
@@ -88,11 +98,11 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
                 });
                 column.setKey(attribute.getName());
                 column.setHeader(new ColumnHeader(attribute));
+                column.setSortable(false);
             }
 
             column.setResizable(true);
             column.setAutoWidth(true);
-            column.setSortable(false);
         }
         withColumnSelector();
 
@@ -163,12 +173,38 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
 
     private void listEntities(String jpql) {
         setItems(query -> {
-            // TODO consider supporting sorting & filtering
-            return getEntityManager().createQuery(jpql)
+            return getEntityManager().createQuery(jpql + orderByClause(query.getSortOrders()))
                     .setFirstResult(query.getOffset())
                     .setMaxResults(query.getLimit())
                     .getResultList().stream();
         });
+    }
+
+    /**
+     * Builds a JPQL order by clause from the grid's sort state. The sorted
+     * keys are column sort properties, which are always attribute names set
+     * by this class — never free-form client input.
+     */
+    private static String orderByClause(List<QuerySortOrder> sortOrders) {
+        if (sortOrders.isEmpty()) {
+            return "";
+        }
+        return sortOrders.stream()
+                .map(so -> "e." + so.getSorted()
+                        + (so.getDirection() == SortDirection.DESCENDING ? " desc" : ""))
+                .collect(Collectors.joining(", ", " order by ", ""));
+    }
+
+    private static List<CriteriaListing.PropertySort> toPropertySorts(List<QuerySortOrder> sortOrders) {
+        return sortOrders.stream()
+                .map(so -> new CriteriaListing.PropertySort(so.getSorted(),
+                        so.getDirection() != SortDirection.DESCENDING))
+                .toList();
+    }
+
+    /** Sorting is offered for basic-typed persistent attributes only. */
+    private static boolean isSortable(Attribute<?, ?> attribute) {
+        return attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.BASIC;
     }
 
     public void filter(String jpqlFilter) {
@@ -193,7 +229,8 @@ public class JpaEntityGrid<T> extends GridSelect<T> implements EntityManagerAwar
     public void filter(FilterSpecification<T> specification) {
         Class<T> javaType = (Class<T>) entityType.getJavaType();
         setItems(query -> CriteriaListing.fetch(getEntityManager(), javaType,
-                specification, query.getOffset(), query.getLimit()).stream());
+                specification, toPropertySorts(query.getSortOrders()),
+                query.getOffset(), query.getLimit()).stream());
     }
 
     public Component createFilterField() {
